@@ -1,15 +1,27 @@
-import mysql.connector
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from config import Config
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Remove any mysql.connector imports
 
-def get_connection():
-    return mysql.connector.connect(
-        host=os.getenv('DB_HOST'),
-        user=os.getenv('DB_USER'),
-        password=os.getenv('DB_PASSWORD'),
-        database=os.getenv('DB_NAME')
-    )
+Base = declarative_base()
 
-# Rest of your database functions (init_db, add_user, etc.) remain the same
+# Handle Render's PostgreSQL SSL requirement
+def get_engine():
+    if Config.DATABASE_URL and "render.com" in Config.DATABASE_URL:
+        return create_engine(
+            Config.DATABASE_URL,
+            connect_args={
+                "sslmode": "require",
+                "sslrootcert": os.path.join(os.path.dirname(__file__), "cert.pem")
+            }
+        )
+    return create_engine(Config.DATABASE_URL)
+
+engine = get_engine()
+Session = sessionmaker(bind=engine)
+
+def init_db():
+    Base.metadata.create_all(engine)
