@@ -23,17 +23,20 @@ def get_engine():
     return create_engine(Config.DATABASE_URL)
 
 engine = get_engine()
+
+# Use SessionLocal to make it clear this is a factory, not an instance
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
-    # Import models here to avoid circular imports
+    # Delayed import to avoid circular import
     from models import User, Task, UserTask, Transaction
     Base.metadata.create_all(bind=engine)
 
-# Dependency
+# Dependency for fastapi or manual db use
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+        
