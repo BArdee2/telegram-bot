@@ -1,3 +1,8 @@
+# At the top of bot.py
+from database import SessionLocal, init_db
+from models import User, Task, UserTask, Transaction
+from sqlalchemy.orm import Session
+
 import logging
 from telegram import Update
 from telegram.ext import (
