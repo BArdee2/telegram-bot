@@ -1,0 +1,34 @@
+databases:
+  - name: telegram-bot-db          # Your MySQL database service name
+    databaseName: taskbot_db       # Must match your code
+    user: taskbot_user             # Must match your code
+    plan: free                     # Free tier for testing
+
+services:
+  - type: web
+    name: telegram-task-bot        # Your web service name
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      # 👇 Add your Telegram token HERE (new entry)
+      - key: TELEGRAM_BOT_TOKEN
+        value: "7309782134:AAEamGo1sTsdLh2anShE9brJVsqV-HEK4CY"  # ← REPLACE with your actual token
+
+      # Database variables (keep existing)
+      - key: DB_HOST
+        fromDatabase:
+          name: telegram-bot-db
+          property: host
+      - key: DB_USER
+        fromDatabase:
+          name: telegram-bot-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: telegram-bot-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: telegram-bot-db
+          property: databaseName
