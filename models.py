@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from database import Base  # Now safe to import Base
+from database import Base
 import datetime
 
 class User(Base):
@@ -58,3 +58,4 @@ class Transaction(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reference = Column(String(100))
     description = Column(String(200))
+    
