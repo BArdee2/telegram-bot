@@ -4,13 +4,14 @@ from sqlalchemy.orm import sessionmaker
 from config import Config
 import os
 
-# Remove any mysql.connector imports
-
 Base = declarative_base()
 
-# Handle Render's PostgreSQL SSL requirement
 def get_engine():
-    if Config.DATABASE_URL and "render.com" in Config.DATABASE_URL:
+    if not Config.DATABASE_URL:
+        raise RuntimeError("DATABASE_URL not configured")
+    
+    # For Render PostgreSQL
+    if "render.com" in Config.DATABASE_URL:
         return create_engine(
             Config.DATABASE_URL,
             connect_args={
