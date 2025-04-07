@@ -1,10 +1,10 @@
-# At the top of bot.py
 from database import SessionLocal, init_db
 from models import User, Task, UserTask, Transaction
 from sqlalchemy.orm import Session
 
 import logging
-from telegram import Update
+import datetime
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -15,9 +15,6 @@ from telegram.ext import (
     CallbackContext,
 )
 from config import Config
-from database import Session, init_db
-from models import User, Task
-import datetime
 
 # Set up logging
 logging.basicConfig(
@@ -31,23 +28,16 @@ TASK_SELECTION, TASK_PROOF, WITHDRAWAL = range(3)
 
 class TaskBot:
     def __init__(self):
-        # Initialize database
         init_db()
-        
-        # Create Application
         self.application = Application.builder().token(Config.TOKEN).build()
-        
-        # Set up handlers
         self.setup_handlers()
     
     def setup_handlers(self):
-        # Command handlers
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(CommandHandler("tasks", self.list_tasks))
         self.application.add_handler(CommandHandler("balance", self.show_balance))
         self.application.add_handler(CommandHandler("withdraw", self.withdraw))
         
-        # Conversation handler for tasks
         task_conv = ConversationHandler(
             entry_points=[CommandHandler('tasks', self.list_tasks)],
             states={
@@ -58,14 +48,13 @@ class TaskBot:
         )
         self.application.add_handler(task_conv)
         
-        # Admin commands
         self.application.add_handler(
             CommandHandler("addtask", self.add_task, filters=filters.User(Config.ADMIN_IDS))
         )
     
     async def start(self, update: Update, context: CallbackContext):
         user = update.effective_user
-        session = Session()
+        session = SessionLocal()
         
         db_user = session.query(User).filter_by(telegram_id=user.id).first()
         
@@ -94,7 +83,7 @@ class TaskBot:
         )
     
     async def list_tasks(self, update: Update, context: CallbackContext):
-        session = Session()
+        session = SessionLocal()
         tasks = session.query(Task).filter_by(is_active=True).all()
         session.close()
         
@@ -124,7 +113,7 @@ class TaskBot:
             return ConversationHandler.END
         
         task_id = int(query.data.split("_")[1])
-        session = Session()
+        session = SessionLocal()
         task = session.query(Task).get(task_id)
         session.close()
         
@@ -151,9 +140,8 @@ class TaskBot:
             await update.message.reply_text("No task selected. Start over with /tasks")
             return ConversationHandler.END
         
-        session = Session()
+        session = SessionLocal()
         
-        # Save task submission
         user_task = UserTask(
             user_id=user.id,
             task_id=task_id,
@@ -174,7 +162,7 @@ class TaskBot:
     
     async def show_balance(self, update: Update, context: CallbackContext):
         user = update.effective_user
-        session = Session()
+        session = SessionLocal()
         db_user = session.query(User).filter_by(telegram_id=user.id).first()
         session.close()
         
@@ -188,7 +176,7 @@ class TaskBot:
     
     async def withdraw(self, update: Update, context: CallbackContext):
         user = update.effective_user
-        session = Session()
+        session = SessionLocal()
         db_user = session.query(User).filter_by(telegram_id=user.id).first()
         
         if not db_user:
@@ -217,7 +205,6 @@ class TaskBot:
         return WITHDRAWAL
     
     async def add_task(self, update: Update, context: CallbackContext):
-        """Admin command to add new tasks"""
         if not context.args:
             await update.message.reply_text("Usage: /addtask <title>|<description>|<reward>|<type>")
             return
@@ -226,7 +213,7 @@ class TaskBot:
             title, desc, reward, task_type = ' '.join(context.args).split('|')
             reward = float(reward)
             
-            session = Session()
+            session = SessionLocal()
             new_task = Task(
                 title=title.strip(),
                 description=desc.strip(),
