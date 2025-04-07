@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from database import Base
+from database import Base  # Now safe to import Base
 import datetime
 
 class User(Base):
@@ -39,7 +39,7 @@ class UserTask(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     task_id = Column(Integer, ForeignKey('tasks.id'), nullable=False)
-    status = Column(String(20), default='pending')  # pending/completed/rejected
+    status = Column(String(20), default='pending')
     submitted_at = Column(DateTime)
     completed_at = Column(DateTime)
     proof = Column(String(500))
@@ -53,8 +53,8 @@ class Transaction(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     amount = Column(Float, nullable=False)
-    type = Column(String(20))  # credit/debit
-    status = Column(String(20), default='pending')  # pending/completed/failed
+    type = Column(String(20))
+    status = Column(String(20), default='pending')
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reference = Column(String(100))
     description = Column(String(200))
